@@ -1,0 +1,76 @@
+CREATE FILE FORMAT "PHDATAFLIGHTUSECASE"."PUBLIC".CSV TYPE = 'CSV' COMPRESSION = 'AUTO' FIELD_DELIMITER = ',' RECORD_DELIMITER = '\n' SKIP_HEADER = 1 FIELD_OPTIONALLY_ENCLOSED_BY = 'NONE' TRIM_SPACE = FALSE ERROR_ON_COLUMN_COUNT_MISMATCH = TRUE ESCAPE = 'NONE' ESCAPE_UNENCLOSED_FIELD = '\134' DATE_FORMAT = 'AUTO' TIMESTAMP_FORMAT = 'AUTO' NULL_IF = ('\\N');
+
+DROP TABLE IF EXISTS PHDATAFLIGHTUSECASE.PUBLIC.AIRLINES;
+CREATE TABLE IF NOT EXISTS AIRLINES
+("IATA_CODE" STRING NOT NULL,
+ "AIRLINE" STRING NOT NULL) 
+ COMMENT = 'This is airlines master data for code and value';
+ 
+//load data manually using cli
+
+DROP TABLE IF EXISTS PHDATAFLIGHTUSECASE.PUBLIC.AIRPORTS;
+CREATE TABLE IF NOT EXISTS AIRPORTS (
+	IATA_CODE VARCHAR(16777216) NOT NULL,
+	AIRPORT VARCHAR(16777216),
+	CITY VARCHAR(16777216),
+	STATE VARCHAR(16777216),
+	COUNTRY VARCHAR(16777216),
+	LATITUDE NUMBER(10,5),
+	LONGITUDE NUMBER(10,5)
+)COMMENT='This is airports master'
+;
+
+//load data manually using cli
+
+CREATE TABLE IF NOT EXISTS PHDATAFLIGHTUSECASE.PUBLIC.FLIGHTS (
+YEAR Number(4,0),
+MONTH Number(2,0),
+DAY Number(2,0),
+DAY_OF_WEEK Number(2,0),
+AIRLINE String,
+FLIGHT_NUMBER String,
+TAIL_NUMBER String,
+ORIGIN_AIRPORT String,
+DESTINATION_AIRPORT String,
+SCHEDULED_DEPARTURE String,
+DEPARTURE_TIME String,
+DEPARTURE_DELAY Number(4,0),
+TAXI_OUT Number(20,0),
+WHEELS_OFF String,
+SCHEDULED_TIME Number(20,0),
+ELAPSED_TIME Number(20,0),
+AIR_TIME Number(20,0),
+DISTANCE Number(20,0),
+WHEELS_ON Number(20,0),
+TAXI_IN Number(20,0),
+SCHEDULED_ARRIVAL Number(20,0),
+ARRIVAL_TIME String,
+ARRIVAL_DELAY String,
+DIVERTED Number(1,0),
+CANCELLED Number(1,0),
+CANCELLATION_REASON String,
+AIR_SYSTEM_DELAY Number(20,0),
+SECURITY_DELAY Number(20,0),
+AIRLINE_DELAY Number(20,0),
+LATE_AIRCRAFT_DELAY Number(20,0),
+WEATHER_DELAY Number(20,0)
+)COMMENT='This is flights data'
+;
+
+
+//Create a stage 
+CREATE STAGE "PHDATAFLIGHTUSECASE"."PUBLIC".int_flight_stage file_format = (type = 'CSV' field_delimiter = ',' skip_header = 1) COMMENT = 'This is internal stage for phFlight';
+
+//snowsql from local to server
+put file://C:\Users\Nikhil\Downloads\flights\flights\*.csv @"PHDATAFLIGHTUSECASE"."PUBLIC".int_flight_stage;
+
+//to check the files from server
+list  @"PHDATAFLIGHTUSECASE"."PUBLIC".int_flight_stage;
+
+//verify the data from server
+select t.$1,t.$2 from  @int_flight_stage t;
+
+//load from stage to table
+copy into flights from  @int_flight_stage
+
+
